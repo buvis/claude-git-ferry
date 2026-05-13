@@ -1,13 +1,17 @@
 {
   "name": "claude-git-ferry",
   "description": "Git workflow skills: catchup, upstream sync, conflict resolution, CI watch, issue sync, dep-PR triage.",
-  "owner": { "name": "buvis" },
+  "owner": {
+    "name": "buvis"
+  },
   "plugins": [
     {
       "name": "git-ferry",
       "description": "Git workflow skills for Claude Code: branch catchup, upstream sync, conflict resolution, CI watching, GitHub issue sync, and dependency PR triage.",
-      "version": "0.1.0",
-      "author": { "name": "buvis" },
+      "version": "0.2.0",
+      "author": {
+        "name": "buvis"
+      },
       "source": "./",
       "category": "workflow"
     }

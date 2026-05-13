@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-13
+
 ### Changed
 
 - **catchup**: Phase 4 now auto-restores tasks from the most-recent prior session for the current project (silent if none), absorbing the standalone `restore-tasks` skill. Adds `list-task-sessions.sh` and `dump-tasks.sh` under `catchup/scripts/`.
