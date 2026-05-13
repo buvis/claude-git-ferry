@@ -226,7 +226,57 @@ Generated: {date}
 
 ### Phase 4: Restore tasks
 
-Invoke `/restore-tasks` to recover tasks from previous sessions on this branch.
+Auto-restore the task list from the most-recent prior session for this project. No prompt — silent if there's nothing to restore.
+
+#### 4a. List candidate sessions
+
+```bash
+"${CLAUDE_SKILL_DIR}/scripts/list-task-sessions.sh" --limit 1
+```
+
+Returns JSON. Handle:
+
+| Output | Action |
+|---|---|
+| `{"error": "no_project_data", ...}` | Skip Phase 4 — no Claude data for this cwd. |
+| `{"error": "no_index", ...}` or `{"error": "no_tasks_dir", ...}` | Skip Phase 4 — no prior sessions or no tasks. |
+| `{"sessions": [], ...}` | Skip Phase 4 — no sessions had tasks. |
+| `{"sessions": [{...}], ...}` | Proceed to 4b with `sessions[0].sessionId`. |
+
+The script sorts by `modified` desc, so `sessions[0]` is the most recent session with at least one task file.
+
+#### 4b. Dump tasks
+
+```bash
+"${CLAUDE_SKILL_DIR}/scripts/dump-tasks.sh" <sessionId>
+```
+
+Returns a JSON array of task objects with schema:
+
+```json
+{
+  "id": "1",
+  "subject": "Task title",
+  "description": "Full description",
+  "activeForm": "Present continuous form",
+  "status": "pending|in_progress|completed",
+  "blocks": ["2", "3"],
+  "blockedBy": ["4"]
+}
+```
+
+#### 4c. Recreate tasks
+
+For each task in the dumped JSON, in original `id` order:
+
+1. Call `TaskCreate` with `subject`, `description`, `activeForm`.
+2. After all tasks are created, for any task with non-empty `blockedBy`, call `TaskUpdate` with `addBlockedBy: task.blockedBy`.
+
+Do not restore `status` — every restored task starts pending so the new session re-evaluates progress.
+
+#### 4d. Note in report
+
+In Phase 5, mention `Restored N tasks from session {sessionId-short} ({modified-date})` so the user sees what came back.
 
 ### Phase 5: Report
 
