@@ -99,7 +99,13 @@ Auto-restore the task list from the most-recent prior session. No prompt; silent
 "${CLAUDE_SKILL_DIR}/scripts/list-task-sessions.sh"   # JSON: {"sessions":[...]} or {"error":...}
 ```
 
-Any `error` key, or empty `sessions` → skip Phase 4. Otherwise take `sessions[0].sessionId` (most recent with tasks) and dump:
+Handle the result:
+
+- `{"sessions": [...]}` non-empty → take `sessions[0].sessionId` (most recent with tasks), proceed below.
+- Empty `sessions`, or `error` in (`no_project_data`, `no_tasks_dir`, `no_index`) → skip Phase 4 silently.
+- `error` is `schema_unexpected` or `index_unreadable` → **do not skip silently.** Claude Code's on-disk layout drifted and the script can no longer find tasks. Flag it in the Phase 5 report: "task restore disabled — `list-task-sessions.sh` needs updating (`{detail}`)."
+
+When proceeding, dump the chosen session:
 
 ```bash
 "${CLAUDE_SKILL_DIR}/scripts/dump-tasks.sh" <sessionId>   # JSON array of {id,subject,description,activeForm,status,blocks,blockedBy}
