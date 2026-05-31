@@ -5,25 +5,15 @@ description: Use when starting work on a project and need local branch/repo cont
 
 # Catch Up
 
-Hydrate context before starting work. With large context windows, load raw sources directly rather than relying on summaries. The capsule captures derived insights — invariants, decisions, health signals — not paraphrases of files you can read.
+Hydrate context before starting work. Load raw sources directly. The capsule captures derived insight (invariants, decisions, health signals), not paraphrases of files you can read.
 
-## Design Principles
+Load generously, but the diff and changed files are the priority. On a clearly huge branch, fall back to a stat-only pass rather than blowing the context window.
 
-- **Load sources, not summaries.** Read the actual files. Don't generate an intermediate summary to read later.
-- **Parallel by default.** Scripts and file reads are independent — run them concurrently.
-- **Capsule = what you can't grep.** Invariants, implicit rules, cross-cutting concerns, project health. Not a restatement of README or package.json.
-- **Full context, no triage.** Don't prioritize which files to read. Load everything, then synthesize.
-- **Follow the graph.** Changes don't exist in isolation. Trace imports and reverse dependencies to see blast radius.
-- **Surface the "why".** Link code changes to the issues/PRs/conversations that motivated them. Load full bodies, not just titles.
-- **CI is context.** A failing build is as important as the code change. Load error logs, not just pass/fail status.
+## Phase 1: Gather (run concurrently)
 
-## Workflow
+Run the scripts and read the files in parallel; don't serialize.
 
-### Phase 1: Gather (parallel)
-
-Run ALL of the following concurrently. Don't wait for one to finish before starting another.
-
-#### 1a. Run scripts
+**Scripts** (skip on failure, note the gap):
 
 ```bash
 "${CLAUDE_SKILL_DIR}/scripts/branch-diff.sh"   # skip if on master
@@ -31,141 +21,46 @@ Run ALL of the following concurrently. Don't wait for one to finish before start
 "${CLAUDE_SKILL_DIR}/scripts/load-memories.sh" # skip if no memories
 ```
 
-#### 1b. Read project sources
+If a script fails, read it and run its git/gh commands directly.
 
-Read every file that exists (skip missing ones):
+**Sources** (read each if it exists):
 
-- `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` — **read these first**, they may contain project-specific catchup rules, priority areas, or workflow requirements that should guide the rest of this process
-- `README.md`
-- All files in `agent_docs/` (if directory exists)
-- All PRDs in `dev/local/prds/wip/`
-- Config files: `package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`, `tsconfig.json`, `Makefile`, `docker-compose.yml`, etc.
-- Directory listing (top 3 levels of `src/`, `lib/`, `app/`, or equivalent)
-- Domain model files: `models/`, `types/`, `schemas/`, `entities/` directories
+- `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` — **first**. They may define project-specific catchup rules, priority areas, or "always check X" constraints. Follow any project catchup checklist in addition to this workflow, and let these rules shape what you flag in Phase 5.
+- `README.md`, `agent_docs/*`, PRDs in `dev/local/prds/wip/`
+- Build/config: `package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`, `Makefile`, etc.
+- Top 3 levels of `src/`/`lib/`/`app/`; domain model dirs (`models/`, `types/`, `schemas/`, `entities/`)
+- `dev/local/project-capsule.md` (prior invariants/health), `dev/local/decisions.md`, `dev/local/troubleshooting.md`, `~/.claude/decisions.md`
 
-**AGENTS.md awareness**: If AGENTS.md (or CLAUDE.md) specifies rules like "always check X before working", "never modify Y without Z", or defines priority areas — note these. They should influence what you flag in the report and how you frame the capsule. If AGENTS.md defines a project-specific catchup checklist, follow it in addition to (not instead of) this workflow.
-
-#### 1c. Read existing capsule
-
-Read `dev/local/project-capsule.md` if it exists — its invariants and health signals from the last session are useful context even as you load fresh sources.
-
-Also read (skip missing):
-- `dev/local/decisions.md` — project decision log (searchable index of architectural and implementation decisions)
-- `dev/local/troubleshooting.md` — recurring-issue database with verified fixes
-- `~/.claude/decisions.md` — global cross-project decisions (tooling, workflow, conventions)
-
-#### 1d. Read recent master activity
+**Recent master:**
 
 ```bash
 git log --oneline -20 master
 ```
 
-Even on a feature branch, knowing what landed on master recently prevents working against stale assumptions.
+## Phase 2: Branch context (feature branches only, skip on master)
 
-### Phase 2: Load branch context (feature branches only)
-
-Skip if on master.
-
-#### 2a. Full diff
-
-After the branch-diff script runs, load the **full diff**:
+After `branch-diff.sh`, load the full picture:
 
 ```bash
-git diff $(git merge-base origin/master HEAD)..HEAD
+git diff $(git merge-base origin/master HEAD)..HEAD             # full diff, don't sample
+git diff $(git merge-base origin/master HEAD)..HEAD --name-only # then read each changed file in full
 ```
 
-With 1M context this fits. Don't sample or skip files. Read the entire diff.
+The diff shows what changed; the full file shows how it fits.
 
-#### 2b. Full file content for changed files
+**Blast radius:** for each changed file, trace its consumers (imports + call sites of any changed symbol) to surface ripple effects the diff alone won't show. Prefer `ast-grep`/`sg` over text grep — it won't false-positive on comments or strings. Read any consumer that looks impacted; always trace consumers of changed utilities, types, and interfaces.
 
-Read the **complete current version** of every file modified on the branch. The diff shows what changed; the full file shows how it fits in context.
+**The "why":** extract issue/PR references (`#NNN`, `fixes #NNN`) from branch commit messages and load full bodies:
 
-```bash
-# Get list of changed files from branch-diff output, then read each one
-git diff $(git merge-base origin/master HEAD)..HEAD --name-only
-```
-
-Read all of them. Don't skip test files or configs — they're context too.
-
-#### 2c. Reverse dependency tracing (blast radius)
-
-For each changed file, find what depends on it. This surfaces ripple effects the diff alone won't show.
-
-Use `ast-grep` (`sg`) for structural matching — it understands syntax, not just text, so it won't false-positive on comments or strings.
-
-For each changed file, find its consumers by matching import/use patterns:
-
-**JS/TS:**
-```bash
-# Find all files importing from a changed module
-sg --pattern 'import $$$BINDINGS from "$MODULE"' --lang ts
-sg --pattern 'require("$MODULE")' --lang ts
-# Filter results to those referencing the changed file's module path
-```
-
-**Python:**
-```bash
-sg --pattern 'from $MODULE import $$$NAMES' --lang python
-sg --pattern 'import $MODULE' --lang python
-```
-
-**Rust:**
-```bash
-sg --pattern 'use $PATH' --lang rust
-sg --pattern 'mod $NAME' --lang rust
-```
-
-**Go:**
-```bash
-sg --pattern 'import ($$$)' --lang go
-sg --pattern 'import "$PATH"' --lang go
-```
-
-Beyond imports, also trace usage of exported symbols that changed. If a function signature, type definition, or interface changed:
-
-```bash
-# Find all call sites of a changed function
-sg --pattern '$FUNC($$$ARGS)' --lang ts  # then filter to the function name
-
-# Find all implementations/usages of a changed type
-sg --pattern '$VAR: ChangedType' --lang ts
-```
-
-`ast-grep` shines here because it distinguishes `foo()` the call from `"foo()"` the string and `// foo()` the comment. This matters when tracing blast radius — false positives waste context, false negatives miss breakage.
-
-Read any reverse dependency files that look impacted by the changes. If a utility, type, or interface file changed, always trace its consumers.
-
-#### 2d. Linked issues and PR context
-
-Extract issue/PR references from branch commits and load their full body text:
-
-Find issue references in commit messages (#123, GH-123, fixes #123, etc.) using `Grep`:
-```
-Grep(pattern="#[0-9]+", path=<commit log output>)
-```
-Or use separate Bash calls — never pipe through grep/sort:
 ```bash
 git log $(git merge-base origin/master HEAD)..HEAD --format="%B"
-```
-Then extract `#NNN` references from the output.
-
-For each referenced issue, fetch the full body:
-```bash
-gh issue view {number} --json title,body,labels,state,comments --jq '.title, .body'
+gh issue view {number} --json title,body,labels,state,comments
+gh pr view --json title,body,comments,reviews   # if an open PR exists
 ```
 
-If the branch has an open PR, fetch its full description and review comments:
-```bash
-gh pr view --json title,body,comments,reviews
-```
+## Phase 3: Synthesize
 
-This gives you the "why" behind the changes, not just the "what".
-
-### Phase 3: Synthesize
-
-Now that everything is in context, update or create the capsule. The capsule is NOT a summary of what you just read — it captures insights that aren't in any single file.
-
-#### Write `dev/local/project-capsule.md`
+Update or create `dev/local/project-capsule.md`. It is NOT a summary of what you read — it captures cross-file insight no single file holds.
 
 ```markdown
 # Project Capsule: {project name}
@@ -173,174 +68,70 @@ Now that everything is in context, update or create the capsule. The capsule is 
 Generated: {date}
 
 ## Key Invariants
-
-{domain rules, boundaries, data flow constraints}
-{implicit rules that aren't documented anywhere}
-{things an agent most often gets wrong without being told}
-{cross-cutting concerns that span multiple files}
+{domain rules, boundaries, data-flow constraints; implicit/undocumented rules; what agents most often get wrong}
 
 ## Architecture Decisions
-
-{why the code is structured this way, not just what it is}
-{tradeoffs that were made and why}
-{patterns that look wrong but are intentional}
+{why it's structured this way; tradeoffs; patterns that look wrong but are intentional}
 
 ## Component Boundaries
-
-{what talks to what, and what doesn't}
-{which modules own which data}
-{where the seams are between subsystems}
+{what talks to what; which modules own which data; where the seams are}
 
 ## Active Work
-
-{current branch purpose, PRDs in wip/, recent focus areas}
-{what's in flight across branches}
-{if autopilot batch active: completed/remaining PRDs, cycle counts, operational observations}
+{current branch purpose, PRDs in wip/, recent focus; if autopilot batch active: completed/remaining PRDs, cycle counts}
 
 ## GitHub State
-
-{open issue count, notable issues (bugs, urgent, P0/P1)}
-{open PR count, stale PRs, PRs needing review}
-{active branches, orphaned branches}
-{latest release, unreleased commits on master}
-{failing workflows, recurring CI failures}
+{open issues + notable ones; open/stale PRs; active/orphaned branches; latest release + unreleased commits; failing/recurring CI}
 
 ## Project Health
-
-{overall assessment: is CI green? are PRs flowing? is debt accumulating?}
-{risks or blockers worth knowing about}
+{is CI green? are PRs flowing? is debt accumulating? risks or blockers}
 
 ## Project Memories
-
-{gotchas, patterns, feedback, and references from memory files}
-{only present if memories exist for this project}
+{gotchas, patterns, feedback from memory files — omit section entirely if none}
 ```
 
-#### Capsule rules
+Rules: don't restate README/CLAUDE.md/config (already in context). Focus on cross-file insight ("auth assumes X because Y", not "auth is in src/auth/"). Update changed sections, leave accurate ones alone. First-time capsule: leave Architecture/Health sparse, they fill in over sessions.
 
-- Don't restate what's in README, CLAUDE.md, or config files — those are already in context.
-- If no memories were loaded, omit the Project Memories section entirely.
-- Focus on cross-file insights: "the auth module assumes X because of Y" not "the auth module is in src/auth/".
-- Update sections that changed, leave accurate ones alone.
-- If this is a first-time capsule and you lack history for some sections (Architecture Decisions, Project Health), leave them sparse — they'll fill in over sessions.
+## Phase 4: Restore tasks
 
-### Phase 4: Restore tasks
-
-Auto-restore the task list from the most-recent prior session for this project. No prompt — silent if there's nothing to restore.
-
-#### 4a. List candidate sessions
+Auto-restore the task list from the most-recent prior session. No prompt; silent if nothing to restore.
 
 ```bash
-"${CLAUDE_SKILL_DIR}/scripts/list-task-sessions.sh" --limit 1
+"${CLAUDE_SKILL_DIR}/scripts/list-task-sessions.sh"   # JSON: {"sessions":[...]} or {"error":...}
 ```
 
-Returns JSON. Handle:
-
-| Output | Action |
-|---|---|
-| `{"error": "no_project_data", ...}` | Skip Phase 4 — no Claude data for this cwd. |
-| `{"error": "no_index", ...}` or `{"error": "no_tasks_dir", ...}` | Skip Phase 4 — no prior sessions or no tasks. |
-| `{"sessions": [], ...}` | Skip Phase 4 — no sessions had tasks. |
-| `{"sessions": [{...}], ...}` | Proceed to 4b with `sessions[0].sessionId`. |
-
-The script sorts by `modified` desc, so `sessions[0]` is the most recent session with at least one task file.
-
-#### 4b. Dump tasks
+Any `error` key, or empty `sessions` → skip Phase 4. Otherwise take `sessions[0].sessionId` (most recent with tasks) and dump:
 
 ```bash
-"${CLAUDE_SKILL_DIR}/scripts/dump-tasks.sh" <sessionId>
+"${CLAUDE_SKILL_DIR}/scripts/dump-tasks.sh" <sessionId>   # JSON array of {id,subject,description,activeForm,status,blocks,blockedBy}
 ```
 
-Returns a JSON array of task objects with schema:
+For each task in original `id` order: call `TaskCreate` with `subject`, `description`, `activeForm`. Then for any task with non-empty `blockedBy`, call `TaskUpdate` with `addBlockedBy`. Do NOT restore `status` — every restored task starts pending so the new session re-evaluates progress.
 
-```json
-{
-  "id": "1",
-  "subject": "Task title",
-  "description": "Full description",
-  "activeForm": "Present continuous form",
-  "status": "pending|in_progress|completed",
-  "blocks": ["2", "3"],
-  "blockedBy": ["4"]
-}
-```
+Note in the Phase 5 report: `Restored N tasks from session {sessionId-short} ({modified-date})`.
 
-#### 4c. Recreate tasks
+## Phase 5: Report
 
-For each task in the dumped JSON, in original `id` order:
+Summarize what you loaded and learned. Flag:
 
-1. Call `TaskCreate` with `subject`, `description`, `activeForm`.
-2. After all tasks are created, for any task with non-empty `blockedBy`, call `TaskUpdate` with `addBlockedBy: task.blockedBy`.
-
-Do not restore `status` — every restored task starts pending so the new session re-evaluates progress.
-
-#### 4d. Note in report
-
-In Phase 5, mention `Restored N tasks from session {sessionId-short} ({modified-date})` so the user sees what came back.
-
-### Phase 5: Report
-
-Summarize what you loaded and what you learned. Flag:
-- **Gaps**: missing architecture docs, no tests, unclear boundaries
-- **Risks**: failing CI, stale PRs, dependency issues, security advisories in deps
-- **Blast radius**: files affected by branch changes that aren't on the branch (reverse deps), open PRs touching the same areas
-- **CI status**: if builds are failing, include the specific errors/stack traces — don't just say "CI is red"
-- **Linked context**: issues/tickets that explain why current work exists, decisions made in PR reviews
-- **AGENTS.md flags**: any project-specific rules or priorities that should guide upcoming work
+- **Gaps**: missing arch docs, no tests, unclear boundaries
+- **Risks**: failing CI, stale PRs, dependency/security advisories
+- **Blast radius**: impacted files not on the branch (reverse deps), open PRs touching the same areas
+- **CI status**: if red, include the specific errors/stack traces, not just "CI is red"
+- **Linked context**: issues/decisions explaining why current work exists
+- **AGENTS.md flags**: project rules/priorities that should guide upcoming work
 - **Suggestions**: things to address before starting new work
 
-## Capsule Maintenance During Work
+## Capsule maintenance during work
 
-Update the capsule when you discover something that belongs there:
+Update the capsule when you discover something that belongs there (new invariant, architecture decision, clarified boundary, PRD moved/started). Keep it surgical: change the section, bump the date, move on. GitHub State is refreshed only on catchup runs, not during work.
 
-- New invariant or implicit rule discovered → add to Key Invariants
-- Architecture decision made or understood → add to Architecture Decisions
-- Boundary clarified → update Component Boundaries
-- PRD moved to done or new PRD started → update Active Work
-- GitHub State is NOT maintained during work — refreshed only on catchup runs
-
-Keep updates surgical — change the relevant section, bump the date, move on.
-
-## Error Handling
+## Error handling
 
 | Situation | Action |
 |-----------|--------|
 | On master, no capsule | Load sources + GitHub state, generate capsule, skip branch diff |
-| On master, capsule exists | Load sources, check capsule for stale sections, update |
+| On master, capsule exists | Load sources, update stale capsule sections |
 | No remote | Use local master as base for branch diff |
 | Detached HEAD | Report current commit, ask user for base branch |
 | Not a git repo | Load sources only, skip all git/GitHub operations |
-| `gh` not installed/authenticated | Skip GitHub state, note gap in report |
-| No GitHub remote | Skip GitHub state, note gap in report |
-| GitHub API rate limited | Skip GitHub state, note gap in report |
-
-## Manual Commands
-
-If scripts unavailable:
-
-### Branch diff
-```bash
-git branch --show-current
-git fetch origin master
-FORK=$(git merge-base origin/master HEAD)
-git diff "$FORK"..HEAD --name-only
-git diff "$FORK"..HEAD --stat
-git log "$FORK"..HEAD --oneline
-git diff "$FORK"..HEAD
-```
-
-### GitHub state
-```bash
-gh issue list --state open --limit 50 --json number,title,labels,createdAt
-gh issue list --state open --label "bug" --limit 20 --json number,title
-gh pr list --state open --json number,title,author,baseRefName,headRefName,createdAt,updatedAt,reviewDecision,isDraft
-git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:short)' refs/remotes/origin/ | head -20
-gh release list --limit 3 --json tagName,publishedAt
-gh run list --branch master --status failure --limit 10 --json workflowName,createdAt,headSha
-gh run list --limit 5 --json workflowName,status,conclusion,headBranch,createdAt
-```
-
-### Recent master
-```bash
-git log --oneline -20 master
-```
+| `gh` missing/unauthenticated, no GitHub remote, or rate limited | Skip GitHub state, note gap in report |

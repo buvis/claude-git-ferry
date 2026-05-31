@@ -25,7 +25,7 @@ Report: operation type, source/target branches, conflicted files.
 
 ## Step 2: Explain Context
 
-**CRITICAL**: Ours/theirs meaning flips during rebase! Read `references/terminology.md` if needed.
+**CRITICAL**: Ours/theirs meaning flips during rebase! Read `references/resolving.md` if needed.
 
 Quick reference (explain to user before showing conflicts):
 
@@ -129,7 +129,5 @@ Run each as a separate Bash call.
 
 ## Reference Files
 
-- `references/terminology.md` - Ours vs theirs for each operation type
+- `references/resolving.md` - Terminology (rebase trap), diagnostic/resolution commands, safety, rerere
 - `references/conflict-types.md` - Different conflict scenarios (read when conflict type unclear)
-- `references/commands.md` - Diagnostic and resolution commands
-- `references/safety.md` - Abort procedures and safety checks
