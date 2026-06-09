@@ -10,8 +10,11 @@
 #   GH_STUB_EXIT      if non-empty, exit immediately with this code (simulate any
 #                     failure — e.g. `gh auth status` unauthenticated). Honored
 #                     for every invocation.
-#   GH_STUB_REPO_FAIL if non-empty, `gh repo view` exits 1 (simulate not-a-repo)
-#                     while `gh auth status` still succeeds.
+#   GH_STUB_REPO_FAIL    if non-empty, `gh repo view` exits 1 (simulate not-a-repo)
+#                        while `gh auth status` still succeeds.
+#   GH_STUB_NO_PRS       if non-empty, `pr list` returns an empty array.
+#   GH_STUB_NO_RELEASES  if non-empty, `release list` returns an empty array.
+#   GH_STUB_NO_DEP_PRS   if non-empty, `pr list` returns PRs with no dep matches.
 set -euo pipefail
 
 # Global failure override (covers unauthenticated `auth status` and the
@@ -53,7 +56,15 @@ case "$cmd $sub" in
         ;;
     "repo list") emit repos.json ;;
     "issue list") emit issues.json ;;
-    "pr list") emit prs.json ;;
+    "pr list")
+        if [[ -n "${GH_STUB_NO_PRS:-}" ]]; then
+            emit prs-empty.json
+        elif [[ -n "${GH_STUB_NO_DEP_PRS:-}" ]]; then
+            emit prs-no-deps.json
+        else
+            emit prs.json
+        fi
+        ;;
     "pr view")
         num="${3:-}"
         if [[ ! "$num" =~ ^[0-9]+$ ]]; then
@@ -67,7 +78,18 @@ case "$cmd $sub" in
             printf '%s\n' "$obj"
         fi
         ;;
-    "release list") emit releases.json ;;
+    "release list")
+        if [[ -n "${GH_STUB_NO_RELEASES:-}" ]]; then
+            # Return empty JSON array; jq queries on [] yield nothing for
+            # .[] iterations and null for .[0].tagName — suppress null.
+            if [[ -n "$query" ]]; then
+                result="$(jq -r "$query" "$FIX/releases-empty.json")"
+                [[ "$result" != "null" ]] && printf '%s\n' "$result"
+            fi
+        else
+            emit releases.json
+        fi
+        ;;
     "run list")
         # When GH_STUB_BRANCH_FAIL is set, emit failure runs for non-master branches.
         if [[ -n "${GH_STUB_BRANCH_FAIL:-}" ]]; then

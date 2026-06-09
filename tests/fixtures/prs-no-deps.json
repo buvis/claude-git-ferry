@@ -1,0 +1,10 @@
+[
+  {
+    "number": 202,
+    "title": "feat: add new feature",
+    "author": { "login": "octocat" },
+    "labels": [],
+    "createdAt": "2026-06-01T10:00:00Z",
+    "url": "https://github.com/buvis/some-other-repo/pull/202"
+  }
+]

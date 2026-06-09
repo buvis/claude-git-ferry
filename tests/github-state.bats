@@ -81,6 +81,31 @@ STUBS="$BATS_TEST_DIRNAME/helpers/stubs"
   [[ "$output" != *"origin/old-branch"* ]]
 }
 
+@test "github-state: no open PRs prints (none) in the pull requests section" {
+  GH_STUB_NO_PRS=1 PATH="$STUBS:$PATH" run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"=== Open Pull Requests ==="* ]]
+  [[ "$output" == *"(none)"* ]]
+}
+
+@test "github-state: no releases prints 'No releases found'" {
+  GH_STUB_NO_RELEASES=1 PATH="$STUBS:$PATH" run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"=== Releases ==="* ]]
+  [[ "$output" == *"No releases found"* ]]
+}
+
+@test "github-state: non-master branch with no failures prints (none) for branch" {
+  # Check out a non-master branch without GH_STUB_BRANCH_FAIL so runs.json (empty
+  # array) is returned, making BRANCH_FAIL_IDS empty (L141-143 branch).
+  git -C "$TEST_TEMP_DIR" checkout -q -b feature/empty-ci
+
+  PATH="$STUBS:$PATH" run bash "$SCRIPT"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"--- feature/empty-ci failures ---"* ]]
+  [[ "$output" == *"(none)"* ]]
+}
+
 @test "github-state: non-master branch failure block renders run list and error-log header" {
   # Check out a non-master branch so CURRENT_BRANCH != master, triggering L124-145.
   git -C "$TEST_TEMP_DIR" checkout -q -b feature/add-tests

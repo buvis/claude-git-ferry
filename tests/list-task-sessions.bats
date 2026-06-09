@@ -53,6 +53,33 @@ fake_home() { echo "$TEST_TEMP_DIR/home"; }
   echo "$output" | jq -e '.error == "schema_unexpected"'
 }
 
+@test "list-task-sessions: entries with no sessionId/modified return schema_unexpected" {
+  home="$(fake_home)"
+  mkdir -p "$home/.claude/projects/-proj" "$home/.claude/tasks"
+  # Entries array exists but entries carry neither sessionId nor modified — the
+  # third schema check (L40-43) fires.
+  printf '{"entries": [{"foo": "bar"}]}' > "$home/.claude/projects/-proj/sessions-index.json"
+  HOME="$home" run bash "$SCRIPT" /proj
+  [ "$status" -eq 1 ]
+  echo "$output" | jq -e '.error == "schema_unexpected"'
+  echo "$output" | jq -e '.detail | test("sessionId/modified")'
+}
+
+@test "list-task-sessions: session with zero task files is excluded from output" {
+  home="$(fake_home)"
+  mkdir -p "$home/.claude/projects/-proj" "$home/.claude/tasks"
+  cp "$FIX/sessions-index.json" "$home/.claude/projects/-proj/sessions-index.json"
+  # Copy only sess-newer tasks; leave sess-older with no task files.
+  mkdir -p "$home/.claude/tasks/sess-newer"
+  cp "$FIX/tasks/sess-newer/task-1.json" "$home/.claude/tasks/sess-newer/task-1.json"
+
+  HOME="$home" run bash "$SCRIPT" /proj
+  [ "$status" -eq 0 ]
+  # Only sess-newer has tasks; sess-older is filtered out (count == 0).
+  echo "$output" | jq -e '.sessions | length == 1'
+  echo "$output" | jq -e '.sessions[0].sessionId == "sess-newer"'
+}
+
 @test "list-task-sessions: populated index returns sessions sorted newest first" {
   home="$(fake_home)"
   mkdir -p "$home/.claude/projects/-proj" "$home/.claude/tasks"
