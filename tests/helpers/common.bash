@@ -7,20 +7,20 @@ setup() {
   # Create fresh temp directory
   export TEST_TEMP_DIR
   TEST_TEMP_DIR=$(mktemp -d)
-  
+
   # Initialize git repo
   git init -q "$TEST_TEMP_DIR"
-  
+
   # Configure git identity
   git -C "$TEST_TEMP_DIR" config user.email "test@example.com"
   git -C "$TEST_TEMP_DIR" config user.name "Test"
-  
+
   # Ensure initial branch is named 'master'
   git -C "$TEST_TEMP_DIR" commit --allow-empty -q -m init
   git -C "$TEST_TEMP_DIR" branch -M master
-  
+
   # Change to temp directory
-  cd "$TEST_TEMP_DIR"
+  cd "$TEST_TEMP_DIR" || return 1
 }
 
 teardown() {

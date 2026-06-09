@@ -32,7 +32,11 @@ jobs:
           shellcheck -S warning \
             skills/catchup/scripts/*.sh \
             skills/review-deps-prs/scripts/*.sh \
-            dev/bin/release
+            dev/bin/release \
+            tests/helpers/common.bash \
+            tests/helpers/stubs/gh
+          # .bats files use --shell=bash because shellcheck has no native bats mode
+          shellcheck --shell=bash -S warning tests/*.bats
 
       - name: Run bats suite
         shell: bash
