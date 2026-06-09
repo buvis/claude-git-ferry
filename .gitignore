@@ -14,3 +14,9 @@ htmlcov/
 # Claude Code local settings
 .claude/
 .local/
+
+# Working documents (PRDs, discovery, scratch)
+dev/local/
+
+# Serena MCP tool state
+.serena/
