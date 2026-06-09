@@ -84,7 +84,7 @@ case "$cmd $sub" in
             # .[] iterations and null for .[0].tagName — suppress null.
             if [[ -n "$query" ]]; then
                 result="$(jq -r "$query" "$FIX/releases-empty.json")"
-                [[ "$result" != "null" ]] && printf '%s\n' "$result"
+                [[ -n "$result" && "$result" != "null" ]] && printf '%s\n' "$result"
             fi
         else
             emit releases.json
