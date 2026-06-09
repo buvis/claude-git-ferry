@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **ci**: offline bats test suite characterizing the six helper scripts plus `dev/bin/release`, gated by `shellcheck -S warning` and run on `ubuntu-latest` and `macos-latest` via GitHub Actions on every push and PR.
+
 ## [0.2.1] - 2026-06-09
 
 ### Fixed
