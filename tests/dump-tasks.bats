@@ -19,6 +19,15 @@ SCRIPT="$BATS_TEST_DIRNAME/../skills/catchup/scripts/dump-tasks.sh"
   [[ "$output" == *"No tasks found for session: nosuch"* ]]
 }
 
+@test "dump-tasks: empty session dir prints empty JSON array and exits 0" {
+  sess="$TEST_TEMP_DIR/home/.claude/tasks/emptysess"
+  mkdir -p "$sess"
+
+  HOME="$TEST_TEMP_DIR/home" run bash "$SCRIPT" emptysess
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '. == []'
+}
+
 @test "dump-tasks: populated session prints a JSON array of tasks" {
   sess="$TEST_TEMP_DIR/home/.claude/tasks/sess1"
   mkdir -p "$sess"
