@@ -1,0 +1,22 @@
+[
+  {
+    "number": 101,
+    "title": "chore(deps): bump actions/checkout from 3 to 4",
+    "author": { "login": "renovate[bot]" },
+    "baseRefName": "master",
+    "headRefName": "renovate/actions-checkout-4.x",
+    "labels": [{ "name": "dependencies" }],
+    "createdAt": "2026-06-02T10:00:00Z",
+    "updatedAt": "2026-06-03T14:00:00Z",
+    "reviewDecision": "REVIEW_REQUIRED",
+    "isDraft": false,
+    "url": "https://github.com/buvis/claude-git-ferry/pull/101",
+    "body": "Automated dependency update from Renovate.",
+    "comments": [
+      { "author": { "login": "octocat" }, "body": "LGTM once CI is green." }
+    ],
+    "reviews": [
+      { "state": "APPROVED", "author": { "login": "octocat" }, "body": "Approved." }
+    ]
+  }
+]

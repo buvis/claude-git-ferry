@@ -1,0 +1,14 @@
+{
+  "entries": [
+    {
+      "sessionId": "sess-newer",
+      "summary": "Most recent session",
+      "modified": "2026-06-05T15:00:00Z"
+    },
+    {
+      "sessionId": "sess-older",
+      "summary": "Earlier session",
+      "modified": "2026-06-01T09:00:00Z"
+    }
+  ]
+}
