@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-09
+
 ### Fixed
 
 - **catchup**: task restore now fails loud — if Claude Code's `sessions-index.json` layout drifts, `list-task-sessions.sh` returns a distinct `schema_unexpected`/`index_unreadable` error that catchup surfaces in its report, instead of silently restoring nothing.
