@@ -64,7 +64,25 @@ case "$cmd $sub" in
         fi
         ;;
     "release list") emit releases.json ;;
-    "run list") emit runs.json ;;
+    "run list")
+        # When GH_STUB_BRANCH_FAIL is set, emit failure runs for non-master branches.
+        if [[ -n "${GH_STUB_BRANCH_FAIL:-}" ]]; then
+            branch_arg=""
+            for ((i = 1; i <= $#; i++)); do
+                if [[ "${!i}" == "--branch" ]]; then
+                    j=$((i + 1))
+                    branch_arg="${!j:-}"
+                fi
+            done
+            if [[ "$branch_arg" != "master" && -n "$branch_arg" ]]; then
+                emit runs-branch-fail.json
+            else
+                emit runs.json
+            fi
+        else
+            emit runs.json
+        fi
+        ;;
     "run view") exit 0 ;;
     *) exit 0 ;;
 esac

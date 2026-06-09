@@ -1,0 +1,11 @@
+[
+  {
+    "databaseId": 9001,
+    "workflowName": "CI",
+    "createdAt": "2026-06-08T10:00:00Z",
+    "headSha": "abc12345def67890",
+    "status": "completed",
+    "conclusion": "failure",
+    "headBranch": "feature/add-tests"
+  }
+]
