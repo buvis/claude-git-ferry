@@ -56,7 +56,11 @@ case "$cmd $sub" in
     "pr list") emit prs.json ;;
     "pr view")
         num="${3:-}"
-        obj="$(jq -c ".[] | select(.number == ${num})" "$FIX/prs.json")"
+        if [[ ! "$num" =~ ^[0-9]+$ ]]; then
+            echo "gh stub: pr view requires an integer PR number, got: '$num'" >&2
+            exit 1
+        fi
+        obj="$(jq -c --argjson num "$num" '.[] | select(.number == $num)' "$FIX/prs.json")"
         if [[ -n "$query" ]]; then
             printf '%s' "$obj" | jq -r "$query"
         else
@@ -84,5 +88,8 @@ case "$cmd $sub" in
         fi
         ;;
     "run view") exit 0 ;;
-    *) exit 0 ;;
+    *)
+        echo "gh stub: unsupported invocation: $*" >&2
+        exit 1
+        ;;
 esac
