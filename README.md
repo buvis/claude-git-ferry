@@ -40,6 +40,20 @@
 
 A ferry's job is unglamorous: get you from one bank to the other without losing cargo. These skills are the same — they shuttle you across branch boundaries, upstream drift, conflict resolution, and CI gates. Nothing flashy; just safe passage.
 
+## Releasing
+
+`dev/bin/release [patch|minor|major]` is a thin shim. The shared release
+script lives in the central marketplace repo,
+[buvis/claude-plugins](https://github.com/buvis/claude-plugins), and every
+release also bumps this plugin's entry there. Developing this plugin
+therefore needs that repo cloned beside this one:
+
+```bash
+git clone git@github.com:buvis/claude-plugins.git ../claude-plugins
+```
+
+Repo-specific pre-release checks live in `dev/bin/release-checks`.
+
 ## License
 
 MIT

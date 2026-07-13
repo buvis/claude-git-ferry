@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Pre-release checks for git-ferry: every skill ships a SKILL.md; tests pass.
+# Run by claude-plugins/scripts/release-plugin with CWD = repo root.
+set -euo pipefail
+
+for skill_dir in skills/*/; do
+  [ -f "$skill_dir/SKILL.md" ] || { echo "Error: $skill_dir missing SKILL.md" >&2; exit 1; }
+done
+
+if find skills -name 'test_*.py' -print -quit 2>/dev/null | grep -q .; then
+  test_dirs=$(find skills -name 'test_*.py' -exec dirname {} \; | sort -u)
+  for d in $test_dirs; do
+    (cd "$d" && uv run --with pytest python -m pytest -q)
+  done
+fi
