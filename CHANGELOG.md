@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **sync-plan-issue**: issue-body update flow is now file-based (`--body-file` + Edit tool). The previous `body=$(...)`/`"$updated_body"` shape cannot work under per-call shells - variables reset between tool calls, so the edit shipped an empty body - and the assignment prefix broke permission matching.
+
 ### Added
 
 - **ci**: offline bats test suite characterizing the six helper scripts, gated by `shellcheck -S warning` (covers scripts, test helpers, and `dev/bin/release`) and run on `ubuntu-latest` and `macos-latest` via GitHub Actions on every push and PR.

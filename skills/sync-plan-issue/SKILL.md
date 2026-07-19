@@ -73,20 +73,26 @@ Optional sections (include when relevant):
 
 ### 6. Update or create issue
 
-**Update existing**:
+**Update existing** (file-based; shell variables do not survive between tool calls, and a variable assignment before `gh` breaks permission-prefix matching):
+
+1. Dump the current body to a temp file (substitute the real issue number):
+
 ```bash
-# Get current body
-body=$(gh issue view "$issue_number" --json body -q '.body')
-
-# If body contains "## Plan Summary", replace that section
-# Otherwise append with --- separator
-
-gh issue edit "$issue_number" --body "$updated_body"
+gh issue view <issue-number> --json body -q .body > /tmp/plan-issue-body.md
 ```
 
-**Create new**:
+2. Edit `/tmp/plan-issue-body.md` with the Edit/Write tool: if it contains "## Plan Summary", replace that section; otherwise append the new summary after a `---` separator.
+
+3. Push the edited file back:
+
 ```bash
-gh issue create --title "$title" --body "$formatted_plan"
+gh issue edit <issue-number> --body-file /tmp/plan-issue-body.md
+```
+
+**Create new** (write the formatted plan to a file first, then):
+
+```bash
+gh issue create --title "<title>" --body-file /tmp/plan-issue-body.md
 ```
 
 ### 7. Confirm
