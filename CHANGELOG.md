@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-07-19
+
 ### Fixed
 
 - **sync-plan-issue**: issue-body update flow is now file-based (`--body-file` + Edit tool). The previous `body=$(...)`/`"$updated_body"` shape cannot work under per-call shells - variables reset between tool calls, so the edit shipped an empty body - and the assignment prefix broke permission matching.
