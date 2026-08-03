@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **catchup**: catchup now harvests the repo's review files into engram so their findings outlive those files.
+
 ## [0.2.2] - 2026-07-19
 
 ### Fixed

@@ -37,6 +37,14 @@ If a script fails, read it and run its git/gh commands directly.
 git log --oneline -20 master
 ```
 
+**Review harvest** (skip on failure, note the gap):
+
+Harvest this repo's review files into engram, best-effort, so their findings survive once those files are garbage-collected. Skip if `engram` is not on PATH, or if a glob below matches no files.
+
+```bash
+engram harvest dev/local/reviews/*.md dev/local/tmp/*review*.md
+```
+
 ## Phase 2: Branch context (feature branches only, skip on master)
 
 After `branch-diff.sh`, load the full picture:
