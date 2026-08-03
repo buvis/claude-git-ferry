@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **catchup**: catchup now harvests the repo's review files into engram so their findings outlive those files.
+- **catchup**: the capsule gains a "Related context" section - catchup refreshes the repo's engram index, queries it at repo and portfolio scope for the session's own topic (branch name plus the wip PRD's title), and records the scored hits with a staleness stamp, so prior work related to what you are about to do is on the page before you start. Skipped entirely when engram is not on PATH or the session has no topic to query.
 
 ## [0.2.2] - 2026-07-19
 

@@ -45,6 +45,21 @@ Harvest this repo's review files into engram, best-effort, so their findings sur
 engram harvest dev/local/reviews/*.md dev/local/tmp/*review*.md
 ```
 
+**Related context** (skip on failure, note the gap):
+
+Retrieve prior work related to what this session is about, so the capsule can point at it. Skip the whole step if `engram` is not on PATH.
+
+Build ONE topic string from what the session is already about: the current branch name (drop the `feature/`-style prefix and turn separators into spaces) plus, when `dev/local/prds/wip/` holds exactly one PRD, that PRD's title (its first `# ` heading). On master with no wip PRD there is no topic — skip the step rather than querying a branch name that says nothing.
+
+```bash
+engram index                                   # refresh this repo first (defaults to --scope repo)
+engram query --scope repo "<topic>" -k 5
+engram query --scope portfolio "<topic>" -k 5
+engram status                                  # staleness of what you just queried
+```
+
+`engram index` refreshes the repo scope only, so the portfolio hits may come from an older index — that is what the staleness stamp in the capsule section records. A nonzero `engram status` means stale or dead rows; report the stamp, don't hide it.
+
 ## Phase 2: Branch context (feature branches only, skip on master)
 
 After `branch-diff.sh`, load the full picture:
@@ -86,6 +101,9 @@ Generated: {date}
 
 ## Active Work
 {current branch purpose, PRDs in wip/, recent focus; if autopilot batch active: completed/remaining PRDs, cycle counts}
+
+## Related context
+{engram hits for this session's topic, from Phase 1. Repo hits first, then portfolio. One line per hit: `file:line — score`, plus a half-line on why it is relevant. End with the topic queried and the staleness stamp from `engram status`. Omit the section entirely if engram is absent or there was no topic}
 
 ## GitHub State
 {open issues + notable ones; open/stale PRs; active/orphaned branches; latest release + unreleased commits; failing/recurring CI}
