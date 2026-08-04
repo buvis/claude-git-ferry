@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **catchup**: catchup now harvests the repo's review files into engram so their findings outlive those files.
-- **catchup**: the capsule gains a "Related context" section - catchup refreshes the repo's engram index, queries it at repo and portfolio scope for the session's own topic (branch name plus the wip PRD's title), and records the scored hits with a staleness stamp, so prior work related to what you are about to do is on the page before you start. Skipped entirely when engram is not on PATH or the session has no topic to query.
+- **catchup**: the capsule gains a "Related context" section - catchup refreshes the repo's engram index, queries it at repo and portfolio scope for the session's own topic (branch name plus the wip PRD's title), and records the scored hits with a staleness stamp, so prior work related to what you are about to do is on the page before you start. The section is always written: when engram is unavailable, the session has no topic, or nothing matched, it says so in one line rather than vanishing, because a missing section reads as "nothing related exists". The staleness stamp is taken at portfolio scope so it covers the widest query above it, and the topic - built from a branch name and a PRD title, both of which can contain shell metacharacters - is passed as a quoted variable rather than interpolated into a command string.
 
 ## [0.2.2] - 2026-07-19
 

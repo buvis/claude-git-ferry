@@ -45,20 +45,23 @@ Harvest this repo's review files into engram, best-effort, so their findings sur
 engram harvest dev/local/reviews/*.md dev/local/tmp/*review*.md
 ```
 
-**Related context** (skip on failure, note the gap):
+**Related context** (never silently absent — on any failure, write the section with a one-line gap note):
 
-Retrieve prior work related to what this session is about, so the capsule can point at it. Skip the whole step if `engram` is not on PATH.
+Retrieve prior work related to what this session is about, so the capsule can point at it. If `engram` is not on PATH, skip the commands — but still write the section, saying engram was unavailable.
 
-Build ONE topic string from what the session is already about: the current branch name (drop the `feature/`-style prefix and turn separators into spaces) plus, when `dev/local/prds/wip/` holds exactly one PRD, that PRD's title (its first `# ` heading). On master with no wip PRD there is no topic — skip the step rather than querying a branch name that says nothing.
+Build ONE topic string from what the session is already about: the current branch name (drop the `feature/`-style prefix and turn separators into spaces) plus, when `dev/local/prds/wip/` holds exactly one PRD, that PRD's title (its first `# ` heading). On master with no single wip PRD there is no topic: skip the queries rather than searching a branch name that says nothing, and record that as the gap note. Do not drop the section — "no topic this session" is itself worth telling the reader, and on a master-default workflow it is the common case.
+
+**The topic is untrusted input.** It is built from a branch name and a PRD title, either of which can contain `"`, a backtick, or `$(`. Never paste it into a double-quoted shell string. Put it in a variable and pass that variable quoted, so the shell treats it as one literal argument:
 
 ```bash
+topic='<topic>'                                # single quotes; escape any literal ' in the topic
 engram index                                   # refresh this repo first (defaults to --scope repo)
-engram query --scope repo "<topic>" -k 5
-engram query --scope portfolio "<topic>" -k 5
-engram status                                  # staleness of what you just queried
+engram query --scope repo "$topic" -k 5
+engram query --scope portfolio "$topic" -k 5
+engram status --scope portfolio                # staleness of the widest scope you queried
 ```
 
-`engram index` refreshes the repo scope only, so the portfolio hits may come from an older index — that is what the staleness stamp in the capsule section records. A nonzero `engram status` means stale or dead rows; report the stamp, don't hide it.
+`engram index` refreshes the repo scope only, so the portfolio hits may come from an older index — that is what the staleness stamp in the capsule section records. Ask `status` for `--scope portfolio` so the stamp actually covers the portfolio query above it; a repo-scoped stamp would describe a narrower scope than the hits it sits under. A nonzero `engram status` means stale or dead rows; report the stamp, don't hide it.
 
 ## Phase 2: Branch context (feature branches only, skip on master)
 
@@ -103,7 +106,7 @@ Generated: {date}
 {current branch purpose, PRDs in wip/, recent focus; if autopilot batch active: completed/remaining PRDs, cycle counts}
 
 ## Related context
-{engram hits for this session's topic, from Phase 1. Repo hits first, then portfolio. One line per hit: `file:line — score`, plus a half-line on why it is relevant. End with the topic queried and the staleness stamp from `engram status`. Omit the section entirely if engram is absent or there was no topic}
+{engram hits for this session's topic, from Phase 1. Repo hits first, then portfolio. One line per hit: `file:line — score`, plus a half-line on why it is relevant. End with the topic queried and the staleness stamp from `engram status --scope portfolio`. Always write this section: when there were no hits, no topic, or engram was unavailable, say so in one line instead — a silently missing section reads as "nothing related exists", which is a different and wrong claim}
 
 ## GitHub State
 {open issues + notable ones; open/stale PRs; active/orphaned branches; latest release + unreleased commits; failing/recurring CI}
