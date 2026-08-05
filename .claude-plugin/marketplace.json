@@ -8,7 +8,7 @@
     {
       "name": "git-ferry",
       "description": "Git workflow skills for Claude Code: branch catchup, upstream sync, conflict resolution, CI watching, GitHub issue sync, and dependency PR triage.",
-      "version": "0.2.2",
+      "version": "0.3.0",
       "author": {
         "name": "buvis"
       },
