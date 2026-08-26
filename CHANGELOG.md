@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **catchup**: the project capsule is now written to `dev/local/meta/project-capsule.md`, and the capsule, decisions and troubleshooting keepers are read from `dev/local/meta/` first, falling back to the older `dev/local/<name>` when `meta/` has no copy. Stores that have not migrated keep working; migrated ones stop depending on the root compat symlink.
+- **catchup-upstream**: the legacy `upstream-cursor` is looked for, and deleted, at both `dev/local/meta/upstream-cursor` and `dev/local/upstream-cursor`.
+
 ## [0.3.0] - 2026-08-05
 
 ### Added
