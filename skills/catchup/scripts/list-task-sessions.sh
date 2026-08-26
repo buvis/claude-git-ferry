@@ -19,7 +19,7 @@ set -e
 
 PROJECT_PATH="${1:-$(pwd)}"
 TASKS_DIR="$HOME/.claude/tasks"
-# Encode path: /Users/bob/foo.bar -> -Users-bob-foo-bar
+# Encode path: /Users/you/foo.bar -> -Users-you-foo-bar
 PROJECT_DIR="$HOME/.claude/projects/$(echo "$PROJECT_PATH" | sed 's|^/|-|' | tr '/.' '-')"
 INDEX_FILE="$PROJECT_DIR/sessions-index.json"
 
