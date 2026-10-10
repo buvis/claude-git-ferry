@@ -17,6 +17,7 @@ htmlcov/
 
 # Working documents (PRDs, discovery, scratch)
 dev/local/
+docs/dev/tmp/
 
 # Serena MCP tool state
 .serena/
