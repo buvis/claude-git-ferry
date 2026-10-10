@@ -29,7 +29,7 @@ If a script fails, read it and run its git/gh commands directly.
 - `README.md`, `agent_docs/*`, PRDs in `docs/dev/project-management/prds/wip/`
 - Build/config: `package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`, `Makefile`, etc.
 - Top 3 levels of `src/`/`lib/`/`app/`; domain model dirs (`models/`, `types/`, `schemas/`, `entities/`)
-- `docs/dev/project-management/meta/project-capsule.md` (prior invariants/health), `docs/dev/project-management/meta/decisions.md`, `docs/dev/project-management/meta/troubleshooting.md`, `~/.claude/decisions.md`. These keepers live in `docs/dev/project-management/meta/`; if `meta/` has no copy, read the older `docs/dev/project-management/<name>` instead (unmigrated store).
+- `docs/dev/project-management/meta/project-capsule.md` (prior invariants/health), `docs/dev/project-management/meta/decisions.md`, `docs/dev/project-management/meta/troubleshooting.md`, `~/.claude/decisions.md`. These keepers live in `docs/dev/project-management/meta/`; if `meta/` has no copy, read the older `dev/local/meta/<name>`, then `dev/local/<name>`, instead (unmigrated store).
 
 **Recent master:**
 
@@ -86,7 +86,7 @@ gh pr view --json title,body,comments,reviews   # if an open PR exists
 
 ## Phase 3: Synthesize
 
-Update or create `docs/dev/project-management/meta/project-capsule.md`, creating `meta/` if absent. Write there even when an older `docs/dev/project-management/project-capsule.md` is what you read. It is NOT a summary of what you read — it captures cross-file insight no single file holds.
+Update or create `docs/dev/project-management/meta/project-capsule.md`, creating `meta/` if absent. Write there even when an older `dev/local/meta/project-capsule.md` or `dev/local/project-capsule.md` is what you read. It is NOT a summary of what you read — it captures cross-file insight no single file holds.
 
 ```markdown
 # Project Capsule: {project name}
