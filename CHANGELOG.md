@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-10
+
 ### Changed
 
 - **catchup, catchup-upstream, sync-plan-issue**: working documents (PRDs, plans, reviews, capsule, keepers) are read from and written to `docs/dev/project-management/` instead of `dev/local/`. Unmigrated `dev/local/` keepers and legacy upstream cursors are still found.
