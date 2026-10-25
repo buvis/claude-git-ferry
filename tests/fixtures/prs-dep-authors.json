@@ -1,0 +1,26 @@
+[
+  {
+    "number": 303,
+    "title": "Pin dependencies",
+    "author": { "login": "app/renovate", "is_bot": true },
+    "labels": [],
+    "createdAt": "2026-10-01T10:00:00Z",
+    "url": "https://github.com/buvis/some-other-repo/pull/303"
+  },
+  {
+    "number": 304,
+    "title": "Pin jq to 1.7",
+    "author": { "login": "dependabot[bot]", "is_bot": true },
+    "labels": [],
+    "createdAt": "2026-10-02T10:00:00Z",
+    "url": "https://github.com/buvis/some-other-repo/pull/304"
+  },
+  {
+    "number": 305,
+    "title": "Pin actions/checkout digest",
+    "author": { "login": "app/dependabot", "is_bot": true },
+    "labels": [],
+    "createdAt": "2026-10-03T10:00:00Z",
+    "url": "https://github.com/buvis/some-other-repo/pull/305"
+  }
+]

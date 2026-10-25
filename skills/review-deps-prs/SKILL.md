@@ -17,8 +17,8 @@ Run the discovery script:
 "${CLAUDE_SKILL_DIR}/scripts/list-dep-prs.sh"
 ```
 
-This discovers repos via `gh repo list` and finds dependency PRs by:
-- **Author**: renovate[bot], dependabot[bot]
+This discovers repos via `gh api user/repos` (own, collaborator and organization repos) and finds dependency PRs by:
+- **Author**: the renovate or dependabot bot, in either login form `gh` reports (`app/renovate`, `renovate[bot]`, `dependabot[bot]`)
 - **Title pattern**: starts with "chore(deps):", "fix(deps):", "bump", "update", "[security]"
 
 ### 2. Classify into tiers

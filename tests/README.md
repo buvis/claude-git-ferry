@@ -128,15 +128,20 @@ Branches (6 total):
 
 ## skills/review-deps-prs/scripts/list-dep-prs.sh
 
-Branches (3 total):
+Branches (4 total):
 
 | # | Branch | Test | Covered |
 |---|--------|------|---------|
-| 1 | `REPOS` empty - print no-repos message, exit 1 | `list-dep-prs: no repos prints the no-repos message and exits 1` | yes |
-| 2 | `PRS` non-empty for a repo - print header + PR data | `list-dep-prs: populated repo lists the dependency PR under a repo header` | yes |
-| 3 | `PRS` empty for a repo - silently skip that repo | `list-dep-prs: repo with PRs but none matching dep filter produces no repo section` | yes |
+| 1 | `gh api user/repos` fails - print message on stderr, exit 1 | `list-dep-prs: failed repo enumeration exits 1 with a message` | yes |
+| 2 | `REPOS` empty - print no-repos message, exit 1 | `list-dep-prs: no repos prints the no-repos message and exits 1` | yes |
+| 3 | `PRS` non-empty for a repo - print header + PR data | `list-dep-prs: populated repo lists the dependency PR under a repo header` | yes |
+| 4 | `PRS` empty for a repo - silently skip that repo | `list-dep-prs: repo with PRs but none matching dep filter produces no repo section` | yes |
 
-**Coverage: 3/3 = 100%**
+**Coverage: 4/4 = 100%**
+
+The organization-repo and bot-login tests exercise data paths of branch 3, not
+branches of their own: an org repo that `gh repo list` never returns, and bot
+authors in both login forms with titles that match no pattern.
 
 ---
 
@@ -149,7 +154,7 @@ Branches (3 total):
 | load-memories.sh | 5 | 4 | 80% | yes |
 | list-task-sessions.sh | 8 | 8 | 100% | yes |
 | dump-tasks.sh | 6 | 6 | 100% | yes |
-| list-dep-prs.sh | 3 | 3 | 100% | yes |
+| list-dep-prs.sh | 4 | 4 | 100% | yes |
 
 All six scripts meet the 80% target. One branch remains uncovered: the master
 CI failures non-empty path in github-state.sh (branch 10). It is a genuine gap,
