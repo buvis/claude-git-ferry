@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-25
+
 ### Fixed
 
 - **review-deps-prs**: the discovery script now walks every repo the token can reach, including organization repos, instead of the account's own repos only; recognizes bot authors that `gh` reports as `app/renovate` or `app/dependabot`; and stops with a message when the repo enumeration fails instead of exiting silently.
