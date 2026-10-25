@@ -22,7 +22,7 @@ Replace the per-repo fan-out with a constant number of owner-scoped search queri
 
 #### Feature: Owner-scoped search queries
 - **Description**: Fetch candidate PRs with 1-3 `gh search prs` queries instead of N `gh pr list` calls.
-- **Inputs**: Owner set derived from one `gh repo list --json owner` call; gh.
+- **Inputs**: Owner set derived from one `gh repo list --json owner` call; gh. Note (2026-10-25): `gh repo list` without an owner argument returns only the account's own repos, never organization ones, so derive the owner set from `gh api user/repos --paginate` (which the shipped script now uses) or from `gh api user/orgs` plus the user.
 - **Outputs**: Combined candidate JSON (number, title, author, labels, createdAt, url, repository).
 - **Behavior**: One query per detection axis — `--author app/renovate`, `--author app/dependabot`, and a title-keyword query covering the manual patterns (`chore(deps)`, `fix(deps)`, `bump`, `update`, `[security]` as `in:title` terms) — each `--state open`, scoped to the user's owners so results never include foreign repos, with an explicit `--limit` (gh's default of 30 truncates silently). If the owner list overflows GitHub's search-qualifier length limit, chunk owners across repeated queries.
 
